@@ -1,8 +1,8 @@
 # 🏆 CompliAI - Legal Metrology Compliance Checker
 
-**PS: SIH25057** | **Team: Vadodara Hackathon 6.0**
+**PS: SIH25057** | **Team: Tech Optimistic**
 
-An AI-powered automated compliance checker for Legal Metrology declarations on E-Commerce platforms, built using Google Gemini Pro Vision API and Streamlit.
+An AI-powered automated compliance checker for Legal Metrology declarations on E-Commerce platforms, built using Google Gemini Pro  and Streamlit.
 
 ## 🎯 Problem Statement
 
@@ -242,7 +242,7 @@ CompliAI/
 
 ## 🤝 Team & Acknowledgments
 
-**Team**: Vadodara Hackathon 6.0  
+**Team**: Tech Optimistic
 **Problem Statement**: SIH25057  
 **Built for**: Smart India Hackathon 2025
 
