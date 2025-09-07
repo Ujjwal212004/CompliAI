@@ -28,7 +28,7 @@ class VisionProcessor:
         else:
             # Configure Gemini
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-flash-exp')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def prepare_image(self, image_input):
         """Prepare image for Gemini API"""
