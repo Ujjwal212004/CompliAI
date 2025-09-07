@@ -17,7 +17,7 @@ except ImportError:
 
 class VisionProcessor:
     """
-    Vision processor for Legal Metrology compliance analysis using Google Gemini Pro Vision
+    Vision processor for Legal Metrology compliance analysis using Google Gemini 2.0 Flash
     """
     
     def __init__(self, api_key: str = None):
@@ -28,7 +28,7 @@ class VisionProcessor:
         else:
             # Configure Gemini
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-pro-vision')
+            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
     
     def prepare_image(self, image_input):
         """Prepare image for Gemini API"""
@@ -47,7 +47,7 @@ class VisionProcessor:
     
     def analyze_product_compliance(self, image_input) -> Dict[str, Any]:
         """
-        Analyze product image for Legal Metrology compliance using Gemini Pro Vision
+        Analyze product image for Legal Metrology compliance using Gemini 2.0 Flash
         """
         if not self.model:
             # Return mock data for demo when API key is not available
