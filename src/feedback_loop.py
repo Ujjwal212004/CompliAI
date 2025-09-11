@@ -122,7 +122,7 @@ class FeedbackLearningLoop:
         
         sample_hash = analysis_results.get('sample_hash')
         if not sample_hash:
-            st.error("No sample hash found in analysis results.")
+            st.error("No sample hash found in analysis results. Please re-analyze the image to provide feedback.")
             return
         
         raw_data = analysis_results.get('raw_data', {})
@@ -280,20 +280,23 @@ class FeedbackLearningLoop:
             }
             
             # Submit feedback
-            success = self.collect_user_feedback(
-                sample_hash, field_corrections, overall_rating, 
-                user_id if user_id else "anonymous"
-            )
-            
-            if success:
-                st.success("✅ Thank you! Your feedback has been submitted and will help improve the model.")
-                st.balloons()
+            try:
+                success = self.collect_user_feedback(
+                    sample_hash, field_corrections, overall_rating, 
+                    user_id if user_id else "anonymous"
+                )
                 
-                # Show contribution stats
-                self.show_contribution_stats(user_id if user_id else "anonymous")
-                
-            else:
-                st.error("❌ Failed to submit feedback. Please try again.")
+                if success:
+                    st.success("✅ Thank you! Your feedback has been submitted and will help improve the model.")
+                    st.balloons()
+                    
+                    # Show contribution stats
+                    self.show_contribution_stats(user_id if user_id else "anonymous")
+                    
+                else:
+                    st.error("❌ Failed to submit feedback. The analysis may not be stored in the database. Please re-analyze the image first.")
+            except Exception as e:
+                st.error(f"❌ Failed to submit feedback: {str(e)}. Please try re-analyzing the image.")
     
     def show_contribution_stats(self, user_id: str):
         """Show user contribution statistics"""

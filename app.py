@@ -167,12 +167,14 @@ def analyze_image(uploaded_file):
             try:
                 uploaded_file.seek(0)
                 image_data = uploaded_file.read()
-                st.session_state.dataset_manager.store_analysis(
+                sample_hash = st.session_state.dataset_manager.store_analysis(
                     image_data=image_data,
                     extracted_text=vision_results.get('extracted_text', ''),
                     compliance_results=validation_results,
                     filename=uploaded_file.name
                 )
+                # Store the hash for feedback use
+                st.session_state.analysis_results['sample_hash'] = sample_hash
             except Exception as storage_error:
                 st.warning(f"Results analyzed but not stored in dataset: {str(storage_error)}")
             
@@ -431,13 +433,6 @@ def render_compliance_analysis():
         
         # Show feedback loop UI after analysis
         st.markdown("---")
-        # Add a sample hash to the analysis results for feedback
-        if 'sample_hash' not in st.session_state.analysis_results:
-            import hashlib
-            import time
-            sample_data = f"{st.session_state.uploaded_image.name}_{time.time()}"
-            st.session_state.analysis_results['sample_hash'] = hashlib.md5(sample_data.encode()).hexdigest()
-        
         st.session_state.feedback_loop.render_feedback_interface(
             st.session_state.analysis_results
         )
