@@ -704,3 +704,6 @@ def render_feedback_management_page(dataset_manager: ComplianceDatasetManager,
     
     with tab5:
         feedback_loop.export_feedback_data()
+
+# Alias for easy import
+FeedbackLoop = FeedbackLearningLoop

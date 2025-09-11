@@ -89,7 +89,7 @@ def initialize_session_state():
     if 'ml_trainer' not in st.session_state:
         st.session_state.ml_trainer = MLTrainer()
     if 'feedback_loop' not in st.session_state:
-        st.session_state.feedback_loop = FeedbackLoop(st.session_state.dataset_manager)
+        st.session_state.feedback_loop = FeedbackLoop(st.session_state.dataset_manager, st.session_state.ml_trainer)
 
 def set_theme(theme):
     """Set Streamlit theme dynamically (requires rerun)"""
@@ -431,22 +431,16 @@ def render_compliance_analysis():
         
         # Show feedback loop UI after analysis
         st.markdown("---")
-        st.markdown("### 🔁 Feedback & Learning")
-        feedback_ui = st.session_state.feedback_loop.render_feedback_ui(
+        # Add a sample hash to the analysis results for feedback
+        if 'sample_hash' not in st.session_state.analysis_results:
+            import hashlib
+            import time
+            sample_data = f"{st.session_state.uploaded_image.name}_{time.time()}"
+            st.session_state.analysis_results['sample_hash'] = hashlib.md5(sample_data.encode()).hexdigest()
+        
+        st.session_state.feedback_loop.render_feedback_interface(
             st.session_state.analysis_results
         )
-        
-        if feedback_ui['submitted']:
-            # Store feedback and potentially retrain
-            try:
-                st.session_state.feedback_loop.collect_feedback(
-                    analysis_id=feedback_ui['analysis_id'],
-                    user_corrections=feedback_ui['corrections'],
-                    overall_rating=feedback_ui['rating']
-                )
-                st.success("✅ Feedback submitted successfully! Thank you for helping improve CompliAI.")
-            except Exception as e:
-                st.error(f"❌ Error submitting feedback: {str(e)}")
     else:
         st.markdown("### 🚀 Get Started")
         st.info("Upload a product packaging image to start the Legal Metrology compliance analysis.")
@@ -475,16 +469,33 @@ def render_ml_management():
     # Training status
     col1, col2, col3 = st.columns(3)
     with col1:
-        total_data = len(st.session_state.dataset_manager.get_analysis_history())
+        try:
+            dataset = st.session_state.dataset_manager.get_training_dataset()
+            total_data = len(dataset['train']) + len(dataset['validation']) + len(dataset['test'])
+        except:
+            total_data = 0
         st.metric("Dataset Size", total_data)
     with col2:
-        feedback_data = len(st.session_state.dataset_manager.get_feedback_data())
-        st.metric("Feedback Entries", feedback_data)
-    with col3:
-        # Check if models exist
         try:
-            models_info = st.session_state.ml_trainer.get_models_info()
-            model_count = len(models_info) if models_info else 0
+            # Count feedback entries
+            import sqlite3
+            conn = sqlite3.connect(st.session_state.dataset_manager.db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM user_feedback")
+            feedback_count = cursor.fetchone()[0]
+            conn.close()
+        except:
+            feedback_count = 0
+        st.metric("Feedback Entries", feedback_count)
+    with col3:
+        try:
+            # Count trained models
+            import sqlite3
+            conn = sqlite3.connect(st.session_state.dataset_manager.db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM ml_training_history WHERE is_active = TRUE")
+            model_count = cursor.fetchone()[0]
+            conn.close()
         except:
             model_count = 0
         st.metric("Trained Models", model_count)
@@ -494,64 +505,119 @@ def render_ml_management():
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("🚀 Train Field Classifiers", use_container_width=True):
-            with st.spinner("Training field classification models..."):
+        if st.button("🚀 Train Complete Pipeline", use_container_width=True):
+            with st.spinner("Training complete ML pipeline..."):
                 try:
-                    results = st.session_state.ml_trainer.train_field_classifiers()
-                    st.success(f"✅ Field classifiers trained! Accuracy: {results.get('avg_accuracy', 'N/A')}")
+                    results = st.session_state.ml_trainer.train_complete_pipeline(min_samples=10)
+                    model_version = results.get('model_version', 'Unknown')
+                    training_results = results.get('training_results', {})
+                    field_count = len(training_results.get('field_classifiers', {}))
+                    st.success(f"✅ Complete pipeline trained! Model: {model_version}, Fields: {field_count}")
                 except Exception as e:
                     st.error(f"❌ Training failed: {str(e)}")
     
     with col2:
-        if st.button("🎯 Train Compliance Predictor", use_container_width=True):
-            with st.spinner("Training compliance prediction model..."):
-                try:
-                    results = st.session_state.ml_trainer.train_compliance_predictor()
-                    st.success(f"✅ Compliance predictor trained! Accuracy: {results.get('accuracy', 'N/A')}")
-                except Exception as e:
-                    st.error(f"❌ Training failed: {str(e)}")
+        if st.button("📋 View Training Status", use_container_width=True):
+            try:
+                import sqlite3
+                conn = sqlite3.connect(st.session_state.dataset_manager.db_path)
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT model_version, accuracy, f1_score, training_samples, created_at 
+                FROM ml_training_history 
+                WHERE is_active = TRUE 
+                ORDER BY created_at DESC LIMIT 5
+                """)
+                results = cursor.fetchall()
+                conn.close()
+                
+                if results:
+                    st.write("Recent Training Results:")
+                    for row in results:
+                        st.write(f"Model: {row[0]}, Accuracy: {row[1]:.3f}, F1: {row[2]:.3f}, Samples: {row[3]}")
+                else:
+                    st.info("No training history available.")
+            except Exception as e:
+                st.error(f"❌ Error loading training status: {str(e)}")
     
     # Model performance
     st.markdown("#### 📈 Model Performance")
     try:
-        performance_data = st.session_state.feedback_loop.get_performance_analytics()
-        if performance_data and len(performance_data) > 0:
-            df = pd.DataFrame(performance_data)
-            fig = px.line(df, x='date', y='accuracy', title='Model Performance Over Time')
+        import sqlite3
+        conn = sqlite3.connect(st.session_state.dataset_manager.db_path)
+        performance_df = pd.read_sql_query("""
+        SELECT model_version, accuracy, f1_score, training_samples, created_at as date
+        FROM ml_training_history 
+        ORDER BY created_at DESC LIMIT 10
+        """, conn)
+        conn.close()
+        
+        if not performance_df.empty:
+            fig = px.line(performance_df, x='date', y='accuracy', title='Model Accuracy Over Time')
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No performance data available yet. Train models and collect feedback to see analytics.")
+            st.info("No performance data available yet. Train models to see analytics.")
     except Exception as e:
-        st.info("Performance analytics will be available after model training and feedback collection.")
+        st.info(f"Performance analytics will be available after model training: {str(e)}")
     
     # Feedback analytics
     st.markdown("#### 🔁 Feedback Analytics")
     try:
-        feedback_trends = st.session_state.feedback_loop.get_feedback_trends()
-        if feedback_trends:
-            col1, col2 = st.columns(2)
-            with col1:
-                ratings_df = pd.DataFrame(feedback_trends['ratings'])
-                if not ratings_df.empty:
-                    fig = px.histogram(ratings_df, x='rating', title='User Ratings Distribution')
-                    st.plotly_chart(fig, use_container_width=True)
-            with col2:
-                corrections_df = pd.DataFrame(feedback_trends['corrections'])
-                if not corrections_df.empty:
-                    fig = px.bar(corrections_df, x='field', y='correction_count', 
-                                title='Field Corrections Frequency')
-                    st.plotly_chart(fig, use_container_width=True)
+        import sqlite3
+        conn = sqlite3.connect(st.session_state.dataset_manager.db_path)
+        
+        # User ratings from feedback_score in compliance_samples
+        ratings_df = pd.read_sql_query("""
+        SELECT feedback_score as rating, COUNT(*) as count
+        FROM compliance_samples 
+        WHERE feedback_score IS NOT NULL
+        GROUP BY feedback_score
+        """, conn)
+        
+        # Field corrections frequency
+        corrections_df = pd.read_sql_query("""
+        SELECT field_name, COUNT(*) as correction_count
+        FROM user_feedback 
+        WHERE field_name NOT LIKE '_%'
+        GROUP BY field_name
+        """, conn)
+        
+        conn.close()
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if not ratings_df.empty:
+                fig = px.bar(ratings_df, x='rating', y='count', title='User Ratings Distribution')
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No rating data available yet.")
+        
+        with col2:
+            if not corrections_df.empty:
+                fig = px.bar(corrections_df, x='field_name', y='correction_count', 
+                            title='Field Corrections Frequency')
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No correction data available yet.")
     except Exception as e:
-        st.info("Feedback analytics will be available after collecting user feedback.")
+        st.info(f"Feedback analytics will be available after collecting user feedback: {str(e)}")
 
 def render_dataset_insights():
     """Render dataset insights and analytics page"""
     st.markdown("### 📈 Dataset Insights & Analytics")
     
     try:
-        # Get dataset statistics
-        history = st.session_state.dataset_manager.get_analysis_history()
-        if not history:
+        # Get dataset statistics from database
+        import sqlite3
+        conn = sqlite3.connect(st.session_state.dataset_manager.db_path)
+        cursor = conn.cursor()
+        
+        # Check if we have any data
+        cursor.execute("SELECT COUNT(*) FROM compliance_samples")
+        total_analyses = cursor.fetchone()[0]
+        
+        if total_analyses == 0:
+            conn.close()
             st.info("No analysis data available yet. Analyze some images to see insights.")
             return
         
@@ -559,47 +625,70 @@ def render_dataset_insights():
         st.markdown("#### 🏆 Compliance Overview")
         col1, col2, col3, col4 = st.columns(4)
         
-        total_analyses = len(history)
-        compliant_count = sum(1 for h in history if h['compliance_score'] >= 80)
-        avg_score = np.mean([h['compliance_score'] for h in history]) if history else 0
+        # Count compliant products (score >= 80)
+        cursor.execute("SELECT COUNT(*) FROM compliance_samples WHERE compliance_score >= 80")
+        compliant_count = cursor.fetchone()[0]
+        
+        # Average compliance score
+        cursor.execute("SELECT AVG(compliance_score) FROM compliance_samples")
+        avg_score = cursor.fetchone()[0] or 0
         
         with col1:
             st.metric("Total Analyses", total_analyses)
         with col2:
             st.metric("Compliant Products", compliant_count)
         with col3:
-            st.metric("Compliance Rate", f"{(compliant_count/total_analyses*100):.1f}%")
+            compliance_rate = (compliant_count/total_analyses*100) if total_analyses > 0 else 0
+            st.metric("Compliance Rate", f"{compliance_rate:.1f}%")
         with col4:
             st.metric("Average Score", f"{avg_score:.1f}%")
         
         # Compliance score distribution
         st.markdown("#### 📉 Compliance Score Distribution")
-        scores_df = pd.DataFrame({
-            'analysis_id': [h['id'] for h in history],
-            'compliance_score': [h['compliance_score'] for h in history],
-            'timestamp': [h['timestamp'] for h in history]
-        })
+        scores_df = pd.read_sql_query("""
+        SELECT id as analysis_id, compliance_score, created_at as timestamp
+        FROM compliance_samples 
+        ORDER BY created_at
+        """, conn)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            fig = px.histogram(scores_df, x='compliance_score', nbins=20, 
-                             title='Compliance Score Distribution')
-            st.plotly_chart(fig, use_container_width=True)
+        if not scores_df.empty:
+            col1, col2 = st.columns(2)
+            with col1:
+                fig = px.histogram(scores_df, x='compliance_score', nbins=20, 
+                                 title='Compliance Score Distribution')
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                fig = px.line(scores_df, x='timestamp', y='compliance_score', 
+                             title='Compliance Scores Over Time')
+                st.plotly_chart(fig, use_container_width=True)
         
-        with col2:
-            fig = px.line(scores_df, x='timestamp', y='compliance_score', 
-                         title='Compliance Scores Over Time')
-            st.plotly_chart(fig, use_container_width=True)
+        # Field-wise analysis (simplified)
+        st.markdown("#### 🔍 Analysis Summary")
+        cursor.execute("""
+        SELECT 
+            COUNT(*) as total_samples,
+            AVG(compliance_score) as avg_score,
+            COUNT(CASE WHEN compliance_score >= 80 THEN 1 END) as compliant,
+            COUNT(CASE WHEN user_corrections IS NOT NULL THEN 1 END) as has_feedback
+        FROM compliance_samples
+        """)
         
-        # Field-wise analysis
-        st.markdown("#### 🔍 Field-wise Performance")
-        field_stats = st.session_state.dataset_manager.get_field_statistics()
-        if field_stats:
-            field_df = pd.DataFrame([
-                {'Field': field, 'Detection Rate': f"{stats['detection_rate']:.1f}%"}
-                for field, stats in field_stats.items()
-            ])
-            st.dataframe(field_df, use_container_width=True)
+        stats = cursor.fetchone()
+        summary_df = pd.DataFrame([{
+            'Metric': 'Total Samples',
+            'Value': stats[0]
+        }, {
+            'Metric': 'Average Score',
+            'Value': f"{stats[1]:.1f}%" if stats[1] else "0%"
+        }, {
+            'Metric': 'Compliant Samples',
+            'Value': stats[2]
+        }, {
+            'Metric': 'Samples with Feedback',
+            'Value': stats[3]
+        }])
+        st.dataframe(summary_df, use_container_width=True)
         
         # Export capabilities
         st.markdown("#### 📥 Export Data")
@@ -607,20 +696,34 @@ def render_dataset_insights():
         
         with col1:
             if st.button("Export Analysis History", use_container_width=True):
-                history_df = pd.DataFrame(history)
-                csv = history_df.to_csv(index=False)
-                st.download_button(
-                    label="Download CSV",
-                    data=csv,
-                    file_name="analysis_history.csv",
-                    mime="text/csv"
-                )
+                history_df = pd.read_sql_query("""
+                SELECT id, image_hash, compliance_score, extracted_fields, violations, created_at
+                FROM compliance_samples 
+                ORDER BY created_at DESC
+                """, conn)
+                
+                if not history_df.empty:
+                    csv = history_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download Analysis History CSV",
+                        data=csv,
+                        file_name="analysis_history.csv",
+                        mime="text/csv"
+                    )
+                    st.success(f"Exported {len(history_df)} analysis records")
+                else:
+                    st.warning("No analysis data to export")
         
         with col2:
-            feedback_data = st.session_state.dataset_manager.get_feedback_data()
-            if feedback_data:
-                if st.button("Export Feedback Data", use_container_width=True):
-                    feedback_df = pd.DataFrame(feedback_data)
+            if st.button("Export Feedback Data", use_container_width=True):
+                feedback_df = pd.read_sql_query("""
+                SELECT uf.*, cs.image_hash, cs.compliance_score
+                FROM user_feedback uf
+                LEFT JOIN compliance_samples cs ON uf.sample_id = cs.id
+                ORDER BY uf.created_at DESC
+                """, conn)
+                
+                if not feedback_df.empty:
                     csv = feedback_df.to_csv(index=False)
                     st.download_button(
                         label="Download Feedback CSV",
@@ -628,9 +731,19 @@ def render_dataset_insights():
                         file_name="feedback_data.csv",
                         mime="text/csv"
                     )
+                    st.success(f"Exported {len(feedback_df)} feedback records")
+                else:
+                    st.warning("No feedback data to export")
+        
+        conn.close()
     
     except Exception as e:
         st.error(f"Error loading dataset insights: {str(e)}")
+        # Close connection if it exists
+        try:
+            conn.close()
+        except:
+            pass
 
 def main():
     initialize_session_state()

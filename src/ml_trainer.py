@@ -856,3 +856,6 @@ class ComplianceMLTrainer:
             return None
         finally:
             conn.close()
+
+# Alias for easy import
+MLTrainer = ComplianceMLTrainer

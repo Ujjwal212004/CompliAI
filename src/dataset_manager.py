@@ -976,3 +976,47 @@ class ComplianceDatasetManager:
         
         conn.close()
         return insights
+    
+    def store_analysis(self, image_data: bytes, extracted_text: str, 
+                      compliance_results: Dict, filename: str = "unknown.jpg") -> str:
+        """Store analysis results for ML training"""
+        
+        # Generate hash for image
+        image_hash = hashlib.md5(image_data).hexdigest()
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Prepare data
+            timestamp = datetime.now().isoformat()
+            compliance_score = compliance_results.get('compliance_score', 0)
+            extracted_fields = json.dumps(compliance_results.get('field_validations', {}))
+            violations = json.dumps(compliance_results.get('violations', []))
+            
+            # Store sample
+            cursor.execute("""
+            INSERT OR REPLACE INTO compliance_samples
+            (image_hash, image_data, image_metadata, extracted_fields, 
+             compliance_score, violations, created_at, updated_at, 
+             annotation_quality, data_source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image_hash, image_data, 
+                json.dumps({'filename': filename, 'size': len(image_data)}),
+                extracted_fields, compliance_score, violations,
+                timestamp, timestamp, 0.8, 'vision_analysis'
+            ))
+            
+            conn.commit()
+            self.logger.info(f"Stored analysis for sample: {image_hash}")
+            return image_hash
+            
+        except Exception as e:
+            self.logger.error(f"Error storing analysis: {str(e)}")
+            return ""
+        finally:
+            conn.close()
+
+# Alias for easy import
+DatasetManager = ComplianceDatasetManager
