@@ -87,7 +87,7 @@ def initialize_session_state():
     if 'dataset_manager' not in st.session_state:
         st.session_state.dataset_manager = DatasetManager()
     if 'ml_trainer' not in st.session_state:
-        st.session_state.ml_trainer = MLTrainer()
+        st.session_state.ml_trainer = MLTrainer(st.session_state.dataset_manager)
     if 'feedback_loop' not in st.session_state:
         st.session_state.feedback_loop = FeedbackLoop(st.session_state.dataset_manager, st.session_state.ml_trainer)
 

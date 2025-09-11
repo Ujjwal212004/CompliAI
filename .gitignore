@@ -67,3 +67,17 @@ Thumbs.db
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# CompliAI specific files
+# Database files (contain user data)
+*.db
+compliance_dataset.db
+
+# ML models (can be large, regenerate as needed)
+models/
+*.pkl
+*.joblib
+
+# ML training logs
+ml_training.log
+compliance_ml.log
