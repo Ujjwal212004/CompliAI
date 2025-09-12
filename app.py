@@ -359,28 +359,28 @@ def render_compliance_overview():
     if not st.session_state.analysis_results:
         return
     results = st.session_state.analysis_results
-    validation = results['validation_results']
-    report = results['compliance_report']
+    validation = results.get('validation_results', {})
+    report = results.get('compliance_report', {})
     st.markdown("### 📊 Compliance Overview")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        score = validation['compliance_score']
+        score = validation.get('compliance_score', 0)
         st.metric(
             "Compliance Score",
             f"{score}%",
             delta=f"{score-70}%" if score >= 70 else f"{score-70}%"
         )
     with col2:
-        status = validation['overall_status']
+        status = validation.get('overall_status', 'Unknown')
         st.metric("Overall Status", status)
     with col3:
-        found = validation['mandatory_fields_found']
-        total = validation['total_mandatory_fields']
+        found = validation.get('mandatory_fields_found', 0)
+        total = validation.get('total_mandatory_fields', 7)
         st.metric("Fields Found", f"{found}/{total}")
     with col4:
-        violations = len(validation['violations'])
+        violations = len(validation.get('violations', []))
         st.metric("Violations", violations)
-    status = validation['overall_status']
+    status = validation.get('overall_status', 'Unknown')
     if status == 'Compliant':
         st.markdown('<div class="compliance-pass">✅ <strong>COMPLIANT</strong> - Product meets Legal Metrology requirements</div>', unsafe_allow_html=True)
     elif status == 'Partially Compliant':
@@ -407,11 +407,17 @@ def render_field_analysis():
     for field, label in field_labels.items():
         with st.expander(f"{label}", expanded=False):
             field_data = raw_data.get(field, {})
-            field_validation = validation['field_validations'].get(field, {})
+            field_validation = validation.get('field_validations', {}).get(field, {})
             col1, col2 = st.columns([1, 1])
             with col1:
-                found = field_data.get('found', False)
-                value = field_data.get('value', 'Not found')
+                # Handle both dict and non-dict field data
+                if isinstance(field_data, dict):
+                    found = field_data.get('found', False)
+                    value = field_data.get('value', 'Not found')
+                else:
+                    found = bool(field_data)
+                    value = str(field_data) if field_data else 'Not found'
+                
                 if found:
                     st.success("✅ Found")
                     st.write(f"Extracted Text: {value}")
@@ -433,12 +439,12 @@ def render_violations_and_recommendations():
     if not st.session_state.analysis_results:
         return
     results = st.session_state.analysis_results
-    validation = results['validation_results']
-    report = results['compliance_report']
+    validation = results.get('validation_results', {})
+    report = results.get('compliance_report', {})
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("### ⚠ Violations Found")
-        violations = validation['violations']
+        violations = validation.get('violations', [])
         if violations:
             for i, violation in enumerate(violations, 1):
                 st.write(f"{i}. {violation}")
@@ -446,7 +452,7 @@ def render_violations_and_recommendations():
             st.success("No violations found! ✅")
     with col2:
         st.markdown("### 💡 Recommendations")
-        recommendations = report['recommendations']
+        recommendations = report.get('recommendations', [])
         if recommendations:
             for i, recommendation in enumerate(recommendations, 1):
                 st.write(f"{i}. {recommendation}")
@@ -473,7 +479,12 @@ def render_compliance_chart():
     }
     for field, label in field_labels.items():
         field_data = raw_data.get(field, {})
-        compliance = field_data.get('compliance', 'Fail')
+        # Safely get compliance status
+        if isinstance(field_data, dict):
+            compliance = field_data.get('compliance', 'Fail')
+        else:
+            compliance = 'Fail'
+        
         fields.append(label)
         statuses.append(1 if compliance == 'Pass' else 0)
         colors.append('#28a745' if compliance == 'Pass' else '#dc3545')
@@ -534,47 +545,86 @@ def generate_compliance_report():
         st.warning("Please analyze an image first!")
         return
     results = st.session_state.analysis_results
-    report = results['compliance_report']
+    report = results.get('compliance_report', {})
     st.markdown("### 📄 Compliance Report")
-    summary = report['summary']
+    summary = report.get('summary', {})
     st.markdown(f"""
-    Overall Status: {summary['overall_status']}  
-    Compliance Score: {summary['compliance_score']}%  
-    Fields Compliant: {summary['fields_compliant']}/{summary['total_fields']}
+    Overall Status: {summary.get('overall_status', 'Unknown')}  
+    Compliance Score: {summary.get('compliance_score', 0)}%  
+    Fields Compliant: {summary.get('fields_compliant', 0)}/{summary.get('total_fields', 7)}
     """)
     st.markdown("Detailed Findings:")
-    for field_name, details in report['field_details'].items():
-        status_emoji = "✅" if details['status'] == 'Pass' else "❌"
-        st.write(f"{status_emoji} {field_name}: {details['status']}")
-        if details['issues']:
-            for issue in details['issues']:
+    field_details = report.get('field_details', {})
+    for field_name, details in field_details.items():
+        status_emoji = "✅" if details.get('status') == 'Pass' else "❌"
+        st.write(f"{status_emoji} {field_name}: {details.get('status', 'Unknown')}")
+        issues = details.get('issues', [])
+        if issues:
+            for issue in issues:
                 st.write(f"   • {issue}")
 
 def export_compliance_data():
     if not st.session_state.analysis_results:
         st.warning("Please analyze an image first!")
         return
+    
     results = st.session_state.analysis_results
-    raw_data = results['raw_data']
-    validation = results['validation_results']
+    raw_data = results.get('raw_data', {})
+    validation = results.get('validation_results', {})
+    
     export_data = []
+    
+    # Safely access field validations
+    field_validations = validation.get('field_validations', {})
+    
     for field, field_data in raw_data.items():
-        field_validation = validation['field_validations'].get(field, {})
+        # Defaults
+        found = False
+        value = ''
+        compliance = 'Unknown'
+        violations = []
+        
+        if isinstance(field_data, dict):
+            found = field_data.get('found', False)
+            value = field_data.get('value', '')
+            compliance = field_data.get('compliance', 'Unknown')
+            violations = field_validations.get(field, {}).get('violations', [])
+        else:
+            # Non-dict field data; best effort
+            value = str(field_data) if field_data is not None else ''
+            found = bool(field_data)
+        
         export_data.append({
             'Field': field.replace('_', ' ').title(),
-            'Found': field_data.get('found', False),
-            'Value': field_data.get('value', ''),
-            'Compliance': field_data.get('compliance', 'Unknown'),
-            'Violations': '; '.join(field_validation.get('violations', []))
+            'Found': 'Yes' if found else 'No',
+            'Value': value,
+            'Compliance': compliance,
+            'Violations': '; '.join(violations) if violations else 'None'
         })
+    
+    # Append overall summary
+    overall_status = validation.get('overall_status', 'Unknown')
+    compliance_score = validation.get('compliance_score', 0)
+    violations_total = len(validation.get('violations', []))
+    export_data.append({
+        'Field': 'OVERALL SUMMARY',
+        'Found': '-',
+        'Value': f"Status: {overall_status}",
+        'Compliance': f"Score: {compliance_score}%",
+        'Violations': f"Total Violations: {violations_total}"
+    })
+    
     df = pd.DataFrame(export_data)
     csv = df.to_csv(index=False)
+    
     st.download_button(
         label="📥 Download CSV",
         data=csv,
-        file_name="compliance_report.csv",
+        file_name=f"compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv"
     )
+    
+    st.success(f"Compliance report ready for download ({len(export_data)} rows)")
 
 def render_compliance_analysis():
     """Render the main compliance analysis page"""
