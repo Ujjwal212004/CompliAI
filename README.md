@@ -296,5 +296,3 @@ For demo queries and technical support, contact the development team.
 - Crop images to focus on packaging text when possible
 
 ---
-
-**Built with ❤️ for Smart India Hackathon 2025**
