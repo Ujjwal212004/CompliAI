@@ -1,298 +1,204 @@
-# 🏆 CompliAI - Legal Metrology Compliance Checker
+# CompliAI - AI-Powered Legal Metrology Compliance Checker
 
-**PS: SIH25057** | **Team: Tech Optimistic**
+## Overview
 
-An AI-powered automated compliance checker for Legal Metrology declarations on E-Commerce platforms, built using Google Gemini Pro  and Streamlit.
+CompliAI is an advanced AI-powered system for automated Legal Metrology compliance verification of packaged products in e-commerce environments. Built using Google Gemini Vision API and advanced machine learning techniques, it validates mandatory product information against the Indian Legal Metrology (Packaged Commodities) Rules 2011.
 
-## 🎯 Problem Statement
+## Features
 
-With the exponential growth of e-commerce in India and globally, ensuring accurate and legally compliant declarations on product listings has become more crucial than ever. Under the Legal Metrology (Packaged Commodities) Rules 2011, all pre-packaged goods sold online must clearly display mandatory information including manufacturer details, net quantity, MRP, consumer care details, manufacturing date, and country of origin.
+### Core Functionality
+- *AI Vision Analysis*: Google Gemini 2.5 Flash API integration for accurate text extraction
+- *Cascading Analysis Pipeline*: Rule-based → ML Model → Gemini API for optimal efficiency
+- *Legal Compliance Engine*: Complete implementation of Legal Metrology Rules 2011
+- *Real-time Scoring*: Instant compliance scores with detailed field-by-field analysis
+- *Interactive Dashboard*: Streamlit-based web interface with visualization and reporting
 
-**CompliAI** addresses this challenge by providing a smart, scalable, and automated solution that can verify declarations in real-time across various e-commerce websites.
+### Advanced Components
+- *Machine Learning Pipeline*: Automated model training with user feedback integration
+- *Dataset Management*: Comprehensive database for training data and analytics
+- *Feedback Loop System*: Continuous model improvement through user corrections
+- *Export Capabilities*: CSV/JSON reporting for regulatory compliance
 
-## 🚀 Features
+## System Requirements
 
-### Core Features
-- **🤖 AI-Powered Analysis**: Uses Google Gemini Pro Vision API for accurate text extraction and analysis
-- **⚖️ Legal Compliance**: Implements complete Legal Metrology (Packaged Commodities) Rules 2011
-- **📊 Real-time Scoring**: Provides instant compliance scores (0-100%)
-- **🔍 Detailed Analysis**: Field-by-field validation with specific violation detection
-- **💡 Smart Recommendations**: Actionable suggestions for compliance improvement
-- **📈 Visualization**: Interactive charts and dashboards for compliance tracking
-
-### Technical Features
-- **Multi-language OCR**: Supports English and Hindi text extraction
-- **Computer Vision**: Advanced image processing for text segmentation
-- **Rule Engine**: Configurable validation logic for regional variations
-- **Batch Processing**: Can handle multiple product images simultaneously
-- **Export Functionality**: Generate detailed reports in CSV/PDF formats
-
-## 🛠️ Tech Stack
-
-- **Frontend**: Streamlit (Python web framework)
-- **AI/ML**: Google Gemini Pro Vision API
-- **Data Processing**: Pandas, NumPy
-- **Visualization**: Plotly, Matplotlib
-- **Image Processing**: PIL (Python Imaging Library)
-- **Backend**: Python 3.8+
-
-## 📋 Legal Metrology Requirements Covered
-
-Based on **Packaged Commodities Rules, 2011**, the system validates:
-
-1. **📍 Manufacturer/Packer/Importer** - Name and complete address
-2. **⚖️ Net Quantity** - Weight, volume, or count with standard units
-3. **💰 MRP** - Maximum Retail Price inclusive of all taxes
-4. **📞 Consumer Care** - Phone number, email, or address for complaints
-5. **📅 Manufacturing Date** - Date of manufacture/import/packing
-6. **🌍 Country of Origin** - Where the product is made
-7. **🏷️ Product Name** - Brand and product identification
-
-## 🔧 Installation & Setup
-
-### Prerequisites
 - Python 3.8 or higher
-- Google Gemini API key
-- Streamlit
+- 2GB RAM minimum (4GB recommended)
+- Windows/Linux/macOS
+- Internet connection for Gemini API
 
-### Quick Start
+## Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd CompliAI
-   ```
+### 1. Clone Repository
+bash
+git clone <repository-url>
+cd CompliAI
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
 
-3. **Set up Gemini API Key**
-   
-   **Option 1: Environment Variable (Recommended)**
-   ```bash
-   # Windows
-   set GEMINI_API_KEY=your_gemini_api_key_here
-   
-   # Linux/Mac
-   export GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+### 2. Install Dependencies
+bash
+pip install -r requirements.txt
 
-   **Option 2: Direct Input**
-   - The application will prompt for API key if not found in environment
 
-4. **Run the application**
-   ```bash
-   streamlit run app.py
-   ```
+### 3. Environment Setup
+Create a .env file or set environment variable:
+bash
+# Windows (PowerShell)
+$env:GEMINI_API_KEY="your_gemini_api_key_here"
 
-5. **Access the application**
-   - Open your browser and go to `http://localhost:8501`
+# Linux/macOS
+export GEMINI_API_KEY="your_gemini_api_key_here"
 
-### Getting Gemini API Key
+
+### 4. Launch Application
+bash
+streamlit run app.py
+
+
+The application will be available at http://localhost:8501
+
+## API Key Setup
 
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create a new project or select existing one
-3. Generate an API key for Gemini Pro Vision
-4. Copy the API key and set it as environment variable
+3. Generate API key for Gemini Pro Vision
+4. Set as environment variable or enter when prompted
 
-## 📱 Usage Instructions
+## Usage
 
-### For Demo/Jury Presentation
+### Basic Analysis
+1. *Upload Image*: Select product packaging image (PNG, JPG, JPEG, WEBP)
+2. *Choose Analysis Method*: 
+   - Cascading Analysis (Recommended): Rule-based → ML → Gemini
+   - Gemini Only: Direct API analysis
+3. *Analyze*: Click "Analyze Compliance" button
+4. *Review Results*: View compliance score, violations, and recommendations
 
-1. **Launch Application**
-   ```bash
-   streamlit run app.py
-   ```
+### Advanced Features
+- *ML Management*: Train custom models with accumulated data
+- *Dataset Insights*: View analytics on compliance trends and patterns
+- *Feedback System*: Provide corrections to improve model accuracy
+- *Bulk Export*: Download compliance reports for regulatory documentation
 
-2. **Upload Product Image**
-   - Click "Browse files" or drag & drop
-   - Supported formats: PNG, JPG, JPEG, WEBP
-   - Ensure image shows product packaging clearly
+## Legal Metrology Validation
 
-3. **Analyze Compliance**
-   - Click "🔍 Analyze Compliance" button
-   - Wait for AI analysis (usually 5-10 seconds)
+The system validates all mandatory fields per Packaged Commodities Rules 2011:
 
-4. **Review Results**
-   - Check compliance score and overall status
-   - Review field-by-field analysis
-   - View violations and recommendations
-   - Export detailed report if needed
+1. *Manufacturer/Packer/Importer*: Complete name and address with PIN code
+2. *Net Quantity*: Weight/volume with proper units (g, kg, ml, l, pieces)
+3. *MRP*: Maximum Retail Price inclusive of all taxes
+4. *Consumer Care*: Phone/email/address for complaints
+5. *Manufacturing Date*: Date of manufacture/import/packing
+6. *Country of Origin*: Clear origin declaration (e.g., "Made in India")
+7. *Product Name*: Brand and product identification
 
-### Sample Test Cases
+## Architecture
 
-**Compliant Product Example:**
-- Food package with all mandatory fields visible
-- Clear manufacturer address with PIN code
-- Net weight with proper units (500g)
-- MRP with "Incl. of all taxes"
-- Consumer care phone number
-- Manufacturing date (MFD: 10/2024)
-- "Made in India" clearly mentioned
 
-**Non-Compliant Product Example:**
-- Missing consumer care details
-- MRP without tax declaration
-- No manufacturing date
-- Incomplete manufacturer address
-
-## 🏗️ Architecture Overview
-
-```
 CompliAI/
-│
-├── app.py                 # Main Streamlit application
+├── app.py                          # Main Streamlit application
 ├── src/
-│   ├── vision_processor.py    # Gemini Vision API integration
-│   └── compliance_engine.py   # Legal Metrology rule engine
-├── requirements.txt       # Python dependencies
-├── README.md             # Documentation
-└── sample_images/        # Test images for demo
-```
+│   ├── vision_processor.py         # Gemini Vision API integration
+│   ├── compliance_engine.py        # Legal Metrology rule validation
+│   ├── cascading_analyzer.py       # Multi-stage analysis pipeline
+│   ├── ml_trainer.py              # Machine learning training pipeline
+│   ├── dataset_manager.py         # Data management and storage
+│   └── feedback_loop.py           # User feedback and model improvement
+├── requirements.txt               # Python dependencies
+├── README.md                      # Project documentation
+└── Guide.md                      # Quick start guide
 
-### Key Components
 
-1. **VisionProcessor** (`src/vision_processor.py`)
-   - Handles Gemini Pro Vision API integration
-   - Processes uploaded images
-   - Extracts text and structured data
-   - Provides fallback mock data for demo
+## Technical Stack
 
-2. **LegalMetrologyRuleEngine** (`src/compliance_engine.py`)
-   - Implements Packaged Commodities Rules 2011
-   - Validates extracted data against legal requirements
-   - Generates compliance scores and violation reports
-   - Provides actionable recommendations
+- *Frontend*: Streamlit (Python web framework)
+- *AI/Vision*: Google Gemini 2.5 Flash API
+- *Machine Learning*: scikit-learn, XGBoost
+- *Data Processing*: Pandas, NumPy
+- *Visualization*: Plotly, Matplotlib
+- *Database*: SQLite for local data storage
+- *Text Processing*: NLTK, Regular Expressions
 
-3. **Streamlit App** (`app.py`)
-   - User interface and interaction logic
-   - File upload and image display
-   - Results visualization and reporting
-   - Export functionality
+## Performance Metrics
 
-## 🎯 Benefits & Impact
+- *Accuracy*: 95%+ text extraction accuracy
+- *Processing Speed*: 5-10 seconds per image analysis
+- *Scalability*: Handles 1000+ images per hour
+- *Field Detection*: 99% accuracy for mandatory fields
 
-### For E-Commerce Platforms
-- **Automated Compliance**: Reduce manual inspection time by 90%
-- **Risk Mitigation**: Avoid legal penalties and consumer complaints
-- **Scalability**: Process thousands of product listings efficiently
-- **Real-time Feedback**: Instant compliance status for sellers
+## Configuration
 
-### For Regulators
-- **Monitoring Dashboard**: Track compliance trends across platforms
-- **Violation Detection**: Identify non-compliant products automatically
-- **Data Analytics**: Generate insights on compliance patterns
-- **Enforcement Support**: Streamlined violation reporting
+### Analysis Methods
+- *Cascading Analysis* (Default): Attempts rule-based analysis first, falls back to ML model, then Gemini API
+- *Gemini Only*: Direct API analysis for maximum accuracy
 
-### For Consumers
-- **Transparency**: Access to complete product information
-- **Trust Building**: Verified compliance status
-- **Consumer Protection**: Ensured access to mandatory details
-- **Quality Assurance**: Products meet legal standards
+### Confidence Thresholds
+- Rule-based: 80%
+- ML Model: 75%
+- Gemini API: 90%
 
-## 📊 Performance Metrics
+## Database Schema
 
-- **Accuracy**: 95%+ text extraction accuracy with Gemini Vision
-- **Speed**: 5-10 seconds average processing time per image
-- **Scalability**: Can process 1000+ images per hour
-- **Language Support**: English and Hindi text recognition
-- **Field Detection**: 99% accuracy for mandatory field identification
+The system maintains comprehensive data storage:
+- *compliance_samples*: Analysis results and ground truth
+- *legal_metrology_rules*: Rule definitions and validation patterns
+- *ml_training_history*: Model training performance tracking
+- *user_feedback*: Correction data for model improvement
 
-## 🚀 Future Roadmap
+## Development
 
-### Phase 2 Features
-- **Multi-platform Integration**: Direct API for e-commerce platforms
-- **Batch Processing**: Upload and analyze multiple images
-- **Mobile App**: Android/iOS app for field inspectors
-- **Advanced Analytics**: ML-powered compliance insights
+### Running Tests
+bash
+python -m pytest tests/
 
-### Phase 3 Enhancements
-- **Blockchain Integration**: Immutable compliance records
-- **IoT Integration**: Real-time packaging compliance at manufacturing
-- **International Standards**: Support for global compliance requirements
-- **API Marketplace**: Third-party developer integrations
 
-## 🏆 Innovation Highlights
+### Code Structure
+- vision_processor.py: Handles image analysis and text extraction
+- compliance_engine.py: Implements legal validation rules
+- cascading_analyzer.py: Manages multi-stage analysis flow
+- ml_trainer.py: Provides ML model training and prediction
+- dataset_manager.py: Manages data storage and retrieval
+- feedback_loop.py: Handles user feedback and model improvement
 
-1. **AI-First Approach**: Leverages cutting-edge Gemini Pro Vision
-2. **Regulatory Expertise**: Built with deep understanding of Legal Metrology
-3. **Scalable Architecture**: Cloud-ready for government deployment
-4. **User Experience**: Intuitive interface for regulatory officers
-5. **Real-time Processing**: Instant compliance verification
-6. **Comprehensive Coverage**: All mandatory fields validated
+## API Integration
 
-## 🎪 Demo Scenarios
+The system supports programmatic integration:
+python
+from src.cascading_analyzer import CascadingComplianceAnalyzer
 
-### Scenario 1: Compliant Food Product
-- Upload image of properly labeled food package
-- Show 100% compliance score
-- Highlight all green checkmarks
+analyzer = CascadingComplianceAnalyzer()
+result = analyzer.analyze_compliance(image_path, use_advanced_flow=True)
 
-### Scenario 2: Non-Compliant Electronics
-- Upload electronics packaging missing consumer care
-- Show compliance issues and recommendations
-- Demonstrate violation reporting
 
-### Scenario 3: Batch Analysis Dashboard
-- Show analytics of multiple product compliance
-- Display trends and insights
-- Export compliance report
-
-## 🤝 Team & Acknowledgments
-
-**Team**: Tech Optimistic
-**Problem Statement**: SIH25057  
-**Built for**: Smart India Hackathon 2025
-
-### Technical Contributors
-- AI/ML Development
-- Legal Compliance Research  
-- UI/UX Design
-- System Architecture
-
-### Special Thanks
-- Ministry of Consumer Affairs, Food & Public Distribution
-- Legal Metrology Department
-- E-commerce industry partners
-- Google AI team for Gemini Pro Vision API
-
-## 📄 License & Compliance
-
-This project is developed for Smart India Hackathon 2025 under Problem Statement SIH25057. It aims to support government initiatives for digital marketplace regulation and consumer protection.
-
-**Compliance Standards**: 
-- Legal Metrology (Packaged Commodities) Rules, 2011
-- Consumer Protection Act, 2019
-- Information Technology Act, 2000
-
----
-
-**🎯 Ready to revolutionize e-commerce compliance in India!**
-
-For demo queries and technical support, contact the development team.
-
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-1. **API Key Error**
-   - Ensure GEMINI_API_KEY environment variable is set
-   - Verify API key is valid and has Vision API access
+*API Key Error*
+- Verify GEMINI_API_KEY environment variable is set
+- Ensure API key has Vision API access enabled
 
-2. **Image Upload Issues**
-   - Check image format (PNG, JPG, JPEG, WEBP)
-   - Ensure image file size < 5MB
-   - Verify image has clear, readable text
+*Image Upload Issues*
+- Check image format (PNG, JPG, JPEG, WEBP supported)
+- Verify file size is under 5MB
+- Ensure image contains readable text
 
-3. **Dependencies Error**
-   - Run `pip install -r requirements.txt`
-   - Use Python 3.8+ version
+*Performance Issues*
+- Use high-resolution images with good lighting
+- Minimize background elements in images
+- Consider using rule-based analysis for faster processing
 
-### Performance Tips
-- Use high-resolution product images for better accuracy
-- Ensure good lighting and minimal background in images
-- Crop images to focus on packaging text when possible
+## License
+
+This project is developed for Smart India Hackathon 2025 under Problem Statement SIH25057.
+
+## Support
+
+For technical issues or questions:
+- Review troubleshooting section above
+- Check system logs in compliance_ml.log
+- Verify all dependencies are properly installed
+- Ensure stable internet connection for API access
 
 ---
+
+*Built for Smart India Hackathon 2025 - Revolutionizing E-commerce Compliance*
