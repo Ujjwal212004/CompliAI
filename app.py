@@ -19,6 +19,7 @@ from compliance_engine import LegalMetrologyRuleEngine
 from dataset_manager import DatasetManager
 from ml_trainer import MLTrainer
 from feedback_loop import FeedbackLoop
+from cascading_analyzer import CascadingComplianceAnalyzer
 
 # Configure Streamlit page
 st.set_page_config(
@@ -169,6 +170,10 @@ def initialize_session_state():
         st.session_state.ml_trainer = MLTrainer(st.session_state.dataset_manager)
     if 'feedback_loop' not in st.session_state:
         st.session_state.feedback_loop = FeedbackLoop(st.session_state.dataset_manager, st.session_state.ml_trainer)
+    if 'cascading_analyzer' not in st.session_state:
+        st.session_state.cascading_analyzer = CascadingComplianceAnalyzer(st.session_state.dataset_manager)
+    if 'analysis_method' not in st.session_state:
+        st.session_state.analysis_method = 'cascading'  # Default to cascading analysis
 
 def set_theme(theme):
     """Set Streamlit theme dynamically (requires rerun)"""
@@ -299,11 +304,28 @@ def render_help_section():
 
 def render_file_upload():
     st.markdown("### 📤 Upload Product Image")
-    uploaded_file = st.file_uploader(
-        "Choose a product packaging image",
-        type=['png', 'jpg', 'jpeg', 'webp'],
-        help="Upload a clear image of the product packaging with visible text"
-    )
+    
+    # Analysis method selector
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        uploaded_file = st.file_uploader(
+            "Choose a product packaging image",
+            type=['png', 'jpg', 'jpeg', 'webp'],
+            help="Upload a clear image of the product packaging with visible text"
+        )
+    with col2:
+        st.markdown("**Analysis Method:**")
+        analysis_method = st.radio(
+            "Choose analysis approach",
+            options=['cascading', 'gemini_only'],
+            format_func=lambda x: {
+                'cascading': '🔄 Sequential Analysis (Rule-based → ML → Gemini)',
+                'gemini_only': '🤖 Gemini API Only (Original)'
+            }[x],
+            index=0,
+            help="Sequential analysis tries rule-based first (fast), then ML model if rule-based fails, finally Gemini API if both fail. Uses the first successful result for efficiency."
+        )
+        st.session_state.analysis_method = analysis_method
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -315,45 +337,129 @@ def render_file_upload():
     return uploaded_file
 
 def analyze_image(uploaded_file):
-    with st.spinner(" Analyzing image with Gemini Pro Vision..."):
+    # Get analysis method from session state
+    analysis_method = st.session_state.get('analysis_method', 'cascading')
+    
+    if analysis_method == 'cascading':
+        with st.spinner("🔄 Performing sequential analysis: Rule-based first, then ML if needed, finally Gemini if required..."):
+            analyze_with_cascading_system(uploaded_file)
+    else:
+        with st.spinner("🤖 Analyzing image with Gemini Vision API..."):
+            analyze_with_gemini_only(uploaded_file)
+
+def analyze_with_cascading_system(uploaded_file):
+    """Perform cascading analysis with rule-based → ML → Gemini flow"""
+    try:
+        uploaded_file.seek(0)
+        
+        # Use cascading analyzer
+        cascading_results = st.session_state.cascading_analyzer.analyze_compliance(
+            uploaded_file, use_advanced_flow=True
+        )
+        
+        if not cascading_results.get('success', False):
+            st.error(f"❌ Cascading analysis failed: {cascading_results.get('error', 'Unknown error')}")
+            return
+        
+        # Store results in session state
+        st.session_state.analysis_results = {
+            'cascading_results': cascading_results,
+            'analysis_method': 'cascading',
+            'validation_results': cascading_results.get('validation_results', {}),
+            'compliance_report': cascading_results.get('compliance_report', {}),
+            'raw_data': cascading_results.get('compliance_data', {}),
+            'steps_performed': cascading_results.get('steps_performed', []),
+            'confidence_scores': cascading_results.get('confidence_scores', {}),
+            'best_result_source': cascading_results.get('best_result_source', 'unknown')
+        }
+        
+        # Store in dataset for ML training
         try:
-            vision_processor = VisionProcessor()
-            rule_engine = LegalMetrologyRuleEngine()
             uploaded_file.seek(0)
-            vision_results = vision_processor.analyze_product_compliance(uploaded_file)
-            if not vision_results.get('success', False):
-                st.error(f"❌ Analysis failed: {vision_results.get('error', 'Unknown error')}")
-                return
-            compliance_data = vision_results.get('compliance_data', {})
-            validation_results = rule_engine.validate_compliance(compliance_data)
-            compliance_report = rule_engine.generate_compliance_report(validation_results)
+            image_data = uploaded_file.read()
             
-            # Store results in session state
-            st.session_state.analysis_results = {
-                'vision_results': vision_results,
-                'validation_results': validation_results,
-                'compliance_report': compliance_report,
-                'raw_data': compliance_data
-            }
+            # Use extracted text from the best result source
+            raw_responses = cascading_results.get('raw_responses', {})
+            extracted_text = ''
+            if cascading_results.get('best_result_source') in raw_responses:
+                best_response = raw_responses[cascading_results.get('best_result_source')]
+                extracted_text = best_response.get('extracted_text', '') or best_response.get('raw_response', '')
             
-            # Store in dataset for ML training
-            try:
-                uploaded_file.seek(0)
-                image_data = uploaded_file.read()
-                sample_hash = st.session_state.dataset_manager.store_analysis(
-                    image_data=image_data,
-                    extracted_text=vision_results.get('extracted_text', ''),
-                    compliance_results=validation_results,
-                    filename=uploaded_file.name
-                )
-                # Store the hash for feedback use
-                st.session_state.analysis_results['sample_hash'] = sample_hash
-            except Exception as storage_error:
-                st.warning(f"Results analyzed but not stored in dataset: {str(storage_error)}")
+            sample_hash = st.session_state.dataset_manager.store_analysis(
+                image_data=image_data,
+                extracted_text=extracted_text,
+                compliance_results=cascading_results.get('validation_results', {}),
+                filename=uploaded_file.name
+            )
             
-            st.success("✅ Analysis completed successfully!")
-        except Exception as e:
-            st.error(f"❌ Error during analysis: {str(e)}")
+            # Store the hash for feedback use
+            st.session_state.analysis_results['sample_hash'] = sample_hash
+        except Exception as storage_error:
+            st.warning(f"Results analyzed but not stored in dataset: {str(storage_error)}")
+        
+        # Show success message with analysis details
+        best_source = cascading_results.get('best_result_source', 'unknown')
+        steps_performed = cascading_results.get('steps_performed', [])
+        
+        success_msg = f"✅ Analysis completed successfully!\n"
+        success_msg += f"📊 Result from: **{best_source.replace('_', ' ').title()}**\n"
+        success_msg += f"🔄 Steps tried: {' → '.join([step.replace('_', ' ').title() for step in steps_performed])}"
+        
+        st.success(success_msg)
+        
+        # Show confidence scores in an info box
+        confidence_scores = cascading_results.get('confidence_scores', {})
+        if confidence_scores:
+            conf_text = "**Method Confidence Scores:**\n"
+            for method, score in confidence_scores.items():
+                conf_text += f"• {method.replace('_', ' ').title()}: {score:.2%}\n"
+            st.info(conf_text)
+            
+    except Exception as e:
+        st.error(f"❌ Error during cascading analysis: {str(e)}")
+
+def analyze_with_gemini_only(uploaded_file):
+    """Fallback to original Gemini-only analysis"""
+    try:
+        vision_processor = VisionProcessor()
+        rule_engine = LegalMetrologyRuleEngine()
+        uploaded_file.seek(0)
+        vision_results = vision_processor.analyze_product_compliance(uploaded_file)
+        if not vision_results.get('success', False):
+            st.error(f"❌ Analysis failed: {vision_results.get('error', 'Unknown error')}")
+            return
+        compliance_data = vision_results.get('compliance_data', {})
+        validation_results = rule_engine.validate_compliance(compliance_data)
+        compliance_report = rule_engine.generate_compliance_report(validation_results)
+        
+        # Store results in session state
+        st.session_state.analysis_results = {
+            'vision_results': vision_results,
+            'analysis_method': 'gemini_only',
+            'validation_results': validation_results,
+            'compliance_report': compliance_report,
+            'raw_data': compliance_data,
+            'best_result_source': 'gemini_api'
+        }
+        
+        # Store in dataset for ML training
+        try:
+            uploaded_file.seek(0)
+            image_data = uploaded_file.read()
+            sample_hash = st.session_state.dataset_manager.store_analysis(
+                image_data=image_data,
+                extracted_text=vision_results.get('extracted_text', ''),
+                compliance_results=validation_results,
+                filename=uploaded_file.name
+            )
+            # Store the hash for feedback use
+            st.session_state.analysis_results['sample_hash'] = sample_hash
+        except Exception as storage_error:
+            st.warning(f"Results analyzed but not stored in dataset: {str(storage_error)}")
+        
+        st.success("✅ Analysis completed successfully using Gemini Vision API!")
+    except Exception as e:
+        st.error(f"❌ Error during analysis: {str(e)}")
 
 def render_compliance_overview():
     if not st.session_state.analysis_results:
