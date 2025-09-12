@@ -10,6 +10,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import json
 
+
+
 # Add src directory to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from vision_processor import VisionProcessor
@@ -313,7 +315,7 @@ def render_file_upload():
     return uploaded_file
 
 def analyze_image(uploaded_file):
-    with st.spinner("🤖 Analyzing image with Gemini Pro Vision..."):
+    with st.spinner(" Analyzing image with Gemini Pro Vision..."):
         try:
             vision_processor = VisionProcessor()
             rule_engine = LegalMetrologyRuleEngine()
@@ -394,13 +396,13 @@ def render_field_analysis():
     validation = results['validation_results']
     st.markdown("### 🔍 Detailed Field Analysis")
     field_labels = {
-        'manufacturer': '🏭 Manufacturer/Packer/Importer',
-        'net_quantity': '⚖ Net Quantity',
-        'mrp': '💰 Maximum Retail Price (MRP)',
-        'consumer_care': '📞 Consumer Care Details',
-        'mfg_date': '📅 Manufacturing Date',
-        'country_origin': '🌍 Country of Origin',
-        'product_name': '🏷 Product Name'
+        'manufacturer': ' Manufacturer/Packer/Importer',
+        'net_quantity': ' Net Quantity',
+        'mrp': ' Maximum Retail Price (MRP)',
+        'consumer_care': ' Consumer Care Details',
+        'mfg_date': ' Manufacturing Date',
+        'country_origin': ' Country of Origin',
+        'product_name': ' Product Name'
     }
     for field, label in field_labels.items():
         with st.expander(f"{label}", expanded=False):
@@ -524,7 +526,7 @@ def render_sidebar():
         if st.button("📊 Export Data", use_container_width=True):
             export_compliance_data()
         st.markdown("---")
-        st.markdown("**Team:** Vadodara Hackathon 6.0")
+        st.markdown("**Team:** Tech Optimistic")
         st.markdown("**PS:** SIH25057")
 
 def generate_compliance_report():
@@ -590,7 +592,7 @@ def render_compliance_analysis():
             st.session_state.analysis_results
         )
     else:
-        st.markdown("### 🚀 Get Started")
+        st.markdown("###  Get Started")
         st.info("Upload a product packaging image to start the Legal Metrology compliance analysis.")
         with st.expander("Sample Use Cases"):
             st.markdown("#### Perfect for analyzing:")
@@ -661,11 +663,11 @@ def render_ml_management():
         st.metric("Trained Models", model_count)
     
     # Training controls
-    st.markdown("#### 🎧 Model Training")
+    st.markdown("#### 🧠 Model Training")
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("🚀 Train Complete Pipeline", use_container_width=True):
+        if st.button(" Train Complete Pipeline", use_container_width=True):
             with st.spinner("Training complete ML pipeline..."):
                 try:
                     results = st.session_state.ml_trainer.train_complete_pipeline(min_samples=10)
@@ -677,7 +679,7 @@ def render_ml_management():
                     st.error(f"❌ Training failed: {str(e)}")
     
     with col2:
-        if st.button("📋 View Training Status", use_container_width=True):
+        if st.button(" View Training Status", use_container_width=True):
             try:
                 import sqlite3
                 conn = sqlite3.connect(st.session_state.dataset_manager.db_path)
