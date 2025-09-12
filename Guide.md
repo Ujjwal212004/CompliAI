@@ -95,8 +95,6 @@ streamlit run app.py
 
 ---
 
----
-
 ## 🛡️ **Backup Plans**
 
 ### **If Gemini API Fails:**
