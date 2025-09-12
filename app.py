@@ -30,11 +30,50 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
+        background: linear-gradient(135deg, #1f77b4, #2e8b57);
+        color: white;
+        padding: 2rem 1rem;
+        border-radius: 10px;
         text-align: center;
         margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .site-title {
+        font-size: 2.8rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        letter-spacing: 2px;
+    }
+    .site-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+    .footer {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+        padding: 3rem 2rem 2rem;
+        margin-top: 3rem;
+        border-radius: 10px 10px 0 0;
+    }
+    .footer h3 {
+        color: #3498db;
+        margin-bottom: 1rem;
+    }
+    .footer-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    .footer-section {
+        line-height: 1.6;
+    }
+    .footer-bottom {
+        text-align: center;
+        padding-top: 2rem;
+        border-top: 1px solid #34495e;
+        color: #bdc3c7;
     }
     .compliance-pass {
         background-color: #d4edda;
@@ -42,6 +81,11 @@ st.markdown("""
         padding: 0.5rem;
         border-radius: 0.25rem;
         border-left: 4px solid #28a745;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .compliance-pass:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
     }
     .compliance-fail {
         background-color: #f8d7da;
@@ -49,6 +93,11 @@ st.markdown("""
         padding: 0.5rem;
         border-radius: 0.25rem;
         border-left: 4px solid #dc3545;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .compliance-fail:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
     }
     .compliance-partial {
         background-color: #fff3cd;
@@ -56,12 +105,33 @@ st.markdown("""
         padding: 0.5rem;
         border-radius: 0.25rem;
         border-left: 4px solid #ffc107;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .compliance-partial:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
     }
     .metric-card {
         background-color: #f8f9fa;
         padding: 1rem;
         border-radius: 0.5rem;
         border: 1px solid #dee2e6;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    .hover-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        background-color: #f9f9f9;
     }
     /* Dark Mode specific styles */
     body.dark-mode, .stApp.dark-mode {
@@ -72,6 +142,13 @@ st.markdown("""
         background-color: #1a1a1a;
         color: #fafafa;
         border: 1px solid #333;
+    }
+    .footer.dark-mode {
+        background-color: #1a1a1a;
+        border-top: 1px solid #333;
+    }
+    .hover-card.dark-mode:hover {
+        background-color: #2a2a2a;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -109,20 +186,114 @@ def set_theme(theme):
     st.rerun()
 
 def render_header():
-    st.markdown('<h1 class="main-header">⚖ CompliAI</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; font-size: 1.2rem; color: #666;">Automated Legal Metrology Compliance Checker for E-Commerce Platforms</p>', unsafe_allow_html=True)
-    with st.expander("📋 Legal Metrology Requirements (Packaged Commodities Rules, 2011)"):
+    # Main header with enhanced styling
+    st.markdown("""
+    <div class="main-header">
+        <div class="site-title">CompliAI</div>
+        <div class="site-subtitle">AI-Powered Legal Metrology Compliance Checker for E-Commerce Excellence</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # How It Works mini expandable section
+    with st.expander("🚀 How It Works - Quick Guide", expanded=False):
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown("""
+            **Step 1: Upload**  
+            📤 Select product image  
+            (PNG, JPG, JPEG, WEBP)
+            """)
+        
+        with col2:
+            st.markdown("""
+            **Step 2: Analyze**  
+            🔍 Click 'Analyze Compliance'  
+            AI scans with Gemini Vision
+            """)
+        
+        with col3:
+            st.markdown("""
+            **Step 3: Review**  
+            📊 View compliance score  
+            Field-by-field analysis
+            """)
+        
+        with col4:
+            st.markdown("""
+            **Step 4: Export**  
+            📥 Download reports  
+            CSV data for records
+            """)
+    
+    # Legal Metrology Requirements with hover card styling
+    with st.expander("Legal Metrology Requirements (Packaged Commodities Rules, 2011)"):
+        st.markdown("**Mandatory Information Required on Pre-packaged Goods:**")
         st.markdown("""
-        Mandatory Information Required on Pre-packaged Goods:
-        1. Manufacturer/Packer/Importer: Name and complete address
-        2. Net Quantity: Weight, volume, or count with standard units
-        3. MRP (Maximum Retail Price): Price inclusive of all taxes  
-        4. Consumer Care Details: Phone number, email, or address for complaints
-        5. Date of Manufacture/Import: Clearly mentioned manufacturing or import date
-        6. Country of Origin: Where the product is made or imported from
-        7. Product Name: Brand and product name clearly visible
-        All fields are mandatory for legal compliance in India.
+        **1. Manufacturer/Packer/Importer:** Complete name and address details  
+        **2. Net Quantity:** Weight, volume, or count with standard metric units  
+        **3. MRP (Maximum Retail Price):** Price inclusive of all applicable taxes  
+        **4. Consumer Care Details:** Contact information for consumer complaints  
+        **5. Date of Manufacture/Import:** Clear manufacturing or import date  
+        **6. Country of Origin:** Manufacturing or import origin country  
+        **7. Product Name:** Brand name and product identification  
+        
+        *All fields are mandatory for legal compliance in Indian markets under the Packaged Commodities Rules, 2011.*
         """)
+
+def render_help_section():
+    """Render comprehensive help section"""
+    st.markdown('<div id="help-section"></div>', unsafe_allow_html=True)
+    st.markdown("### How CompliAI Works")
+    
+    # Use streamlit components instead of raw HTML to prevent rendering issues
+    st.info("**CompliAI automatically analyzes product packaging images to ensure compliance with Indian Legal Metrology requirements for e-commerce platforms.**")
+    
+    st.markdown("#### Step-by-Step Guide:")
+    
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.markdown("**Step 1:**")
+    with col2:
+        st.markdown("**Upload Product Image** - Click 'Browse files' and select a clear image of your product packaging. Supported formats: PNG, JPG, JPEG, WEBP.")
+    
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.markdown("**Step 2:**")
+    with col2:
+        st.markdown("**Click 'Analyze Compliance'** - Our AI-powered system will scan your image using Google's Gemini Pro Vision technology.")
+    
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.markdown("**Step 3:**")
+    with col2:
+        st.markdown("**Review Compliance Results** - View your compliance score, field-by-field analysis, and detailed violation reports.")
+    
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.markdown("**Step 4:**")
+    with col2:
+        st.markdown("**Download Reports (Optional)** - Generate and download detailed compliance reports for your records.")
+    
+    st.markdown("#### Best Practices for Accurate Results:")
+    st.markdown("""
+    - Use high-resolution images with good lighting
+    - Ensure all text is clearly visible and not blurred
+    - Capture the entire product packaging in the frame
+    - Avoid shadows or glare that might obscure important text
+    - Include both front and back labels if compliance information is split
+    """)
+    
+    st.markdown("#### What CompliAI Checks:")
+    st.markdown("""
+    - Manufacturer, packer, or importer details with complete address
+    - Net quantity in standard units (grams, liters, pieces)
+    - Maximum Retail Price (MRP) including taxes
+    - Consumer care contact information
+    - Manufacturing or import date
+    - Country of origin
+    - Product name and brand identification
+    """)
 
 def render_file_upload():
     st.markdown("### 📤 Upload Product Image")
@@ -353,26 +524,8 @@ def render_sidebar():
         if st.button("📊 Export Data", use_container_width=True):
             export_compliance_data()
         st.markdown("---")
-        st.markdown("### ℹ About CompliAI")
-        st.markdown("""
-        CompliAI is an AI-powered compliance checker for Legal Metrology requirements in India.
-        Features:
-        - 🤖 Gemini Pro Vision AI analysis
-        - ⚖ Legal Metrology Rules compliance
-        - 📊 Real-time compliance scoring
-        - 📈 Detailed violation reports
-        - 💡 Actionable recommendations
-        - 🔁 Feedback learning loop for continuous improvement
-        - 🧠 Field-wise ML classifiers and compliance predictors
-        Built for:
-        - E-commerce platforms
-        - Regulatory compliance
-        - Product manufacturers
-        - Quality assurance teams
-        """)
-        st.markdown("---")
-        st.markdown("Team: Vadodara Hackathon 6.0")
-        st.markdown("PS: SIH25057")
+        st.markdown("**Team:** Vadodara Hackathon 6.0")
+        st.markdown("**PS:** SIH25057")
 
 def generate_compliance_report():
     if not st.session_state.analysis_results:
@@ -439,22 +592,34 @@ def render_compliance_analysis():
     else:
         st.markdown("### 🚀 Get Started")
         st.info("Upload a product packaging image to start the Legal Metrology compliance analysis.")
-        with st.expander("📖 Sample Use Cases"):
+        with st.expander("Sample Use Cases"):
+            st.markdown("#### Perfect for analyzing:")
             st.markdown("""
-            Perfect for analyzing:
-            - Food product packaging
-            - Cosmetic product labels  
-            - Electronic device packaging
-            - Pharmaceutical product boxes
-            - Consumer goods packaging
-            - Import/Export product labels
+            - Food product packaging and labels
+            - Cosmetic and personal care product labels
+            - Electronic device packaging and warranty cards
+            - Pharmaceutical product boxes and strips
+            - Consumer goods packaging across categories
+            - Import/Export product labels and documentation
+            """)
             
-            Industries:
-            - E-commerce platforms (Amazon, Flipkart, etc.)
-            - Food & Beverage companies
-            - FMCG manufacturers
-            - Import/Export businesses
-            - Regulatory compliance teams
+            st.markdown("#### Target Industries:")
+            st.markdown("""
+            - E-commerce platforms and marketplaces
+            - Food and Beverage manufacturers
+            - FMCG and consumer goods companies
+            - Import/Export trading businesses
+            - Regulatory compliance and quality assurance teams
+            - Third-party logistics and fulfillment centers
+            """)
+            
+            st.markdown("#### Business Benefits:")
+            st.markdown("""
+            - Automated compliance verification reduces manual errors
+            - Faster product onboarding for e-commerce platforms
+            - Proactive identification of compliance violations
+            - Detailed audit trails for regulatory requirements
+            - Cost reduction in compliance management processes
             """)
 
 def render_ml_management():
@@ -740,6 +905,44 @@ def render_dataset_insights():
         except:
             pass
 
+def render_footer():
+    """Render compact footer with expandable about section"""
+    # Add visual separator
+    st.markdown("---")
+    
+    # Compact footer with expandable about section
+    with st.expander("💼 About CompliAI - Features & Roadmap", expanded=False):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**Current Features:**")
+            st.markdown("""
+            • AI-Powered Analysis (Gemini Pro Vision)  
+            • 7-Field Legal Metrology Compliance  
+            • Intelligent Scoring & Violation Reports  
+            • Machine Learning Integration  
+            • Export & Audit Capabilities  
+            """)
+        
+        with col2:
+            st.markdown("**Future Enhancements:**")
+            st.markdown("""
+            • Multi-Language OCR Support  
+            • Batch Processing & API Integration  
+            • Real-time Monitoring Systems  
+            • Advanced Predictive Analytics  
+            • Regulatory Updates Sync  
+            """)
+    
+    # Compact footer bottom
+    st.markdown(
+        "<div style='text-align: center; color: #666; font-size: 0.9rem; margin-top: 1rem;'>"
+        "CompliAI - AI-Powered Legal Metrology Compliance • "
+        "Smart India Hackathon 2025 (SIH25057)"
+        "</div>",
+        unsafe_allow_html=True
+    )
+
 def main():
     initialize_session_state()
     render_header()
@@ -754,6 +957,9 @@ def main():
         render_ml_management()
     elif active_page == "Dataset Insights":
         render_dataset_insights()
+    
+    # Render footer on all pages
+    render_footer()
 
 if __name__ == "__main__":
     main()
