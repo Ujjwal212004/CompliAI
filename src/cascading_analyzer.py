@@ -371,28 +371,50 @@ class CascadingComplianceAnalyzer:
         product_name_found = False
         product_name_value = ""
         
-        # Look for product name - skip company/address lines but find product description
-        company_line_found = False
-        for line in lines:
+        # Enhanced product name detection - look for prominent brand/product names
+        product_candidates = []
+        
+        for i, line in enumerate(lines):
             line_stripped = line.strip()
-            if line_stripped and len(line_stripped) > 3:
-                # Skip obvious manufacturer/company name lines
-                if any(skip_word in line.lower() for skip_word in ["pvt ltd", "company", "industries", "co.", "ltd"]):
-                    company_line_found = True
-                    continue
-                    
-                # Skip address lines
-                if any(skip_word in line.lower() for skip_word in ["plot", "sector", "area", "estate", "road", "pin", "-"]):
-                    continue
-                    
-                # Skip technical/contact lines
-                if any(skip_word in line.lower() for skip_word in ["mfd", "mrp", "net", "weight", "quantity", "email", "phone", "care", "@", "made in", "best before", "manufacturing", "date", "origin"]):
-                    continue
-                
-                # This should be the product name
-                product_name_found = True
-                product_name_value = line_stripped
-                break
+            if not line_stripped or len(line_stripped) <= 2:
+                continue
+            
+            line_lower = line_stripped.lower()
+            
+            # Skip obvious non-product lines
+            skip_patterns = [
+                "pvt ltd", "company", "industries", "co.", "ltd", "private", "limited",
+                "plot", "sector", "area", "estate", "road", "pin", "address", "-", ":",
+                "mfd", "mrp", "net", "weight", "quantity", "email", "phone", "care", "@",
+                "made in", "best before", "manufacturing", "date", "origin", "exp", "expiry",
+                "rs", "₹", "price", "rupees", "ml", "gram", "kg", "litre"
+            ]
+            
+            if any(pattern in line_lower for pattern in skip_patterns):
+                continue
+            
+            # Look for short, prominent words that could be product names
+            # Common product name patterns
+            if len(line_stripped) <= 15 and len(line_stripped) >= 2:
+                # Check if it looks like a product name (short, capitalized)
+                if line_stripped[0].isupper() or line_stripped.isupper():
+                    product_candidates.append((i, line_stripped))
+        
+        # Choose the best product name candidate
+        if product_candidates:
+            # Prefer shorter names that appear earlier
+            product_candidates.sort(key=lambda x: (len(x[1]), x[0]))
+            product_name_found = True
+            product_name_value = product_candidates[0][1]
+        else:
+            # Fallback: use first non-skipped line
+            for line in lines:
+                line_stripped = line.strip()
+                if (line_stripped and len(line_stripped) > 2 and 
+                    not any(skip in line_stripped.lower() for skip in ["pvt", "ltd", "plot", "sector"])):
+                    product_name_found = True
+                    product_name_value = line_stripped
+                    break
         
         fields["product_name"]["found"] = product_name_found
         fields["product_name"]["value"] = product_name_value

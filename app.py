@@ -319,11 +319,11 @@ def render_file_upload():
             "Choose analysis approach",
             options=['cascading', 'gemini_only'],
             format_func=lambda x: {
-                'cascading': '🔄 Sequential Analysis (Rule-based → ML → Gemini)',
-                'gemini_only': '🤖 Gemini API Only (Original)'
+                'cascading': '✅ Smart Analysis (Recommended)',
+                'gemini_only': '🔧 Direct Gemini Only (Debug)'
             }[x],
             index=0,
-            help="Sequential analysis tries rule-based first (fast), then ML model if rule-based fails, finally Gemini API if both fail. Uses the first successful result for efficiency."
+            help="Smart Analysis uses our enhanced field extraction with real Gemini API integration. Choose this for accurate results from your uploaded images."
         )
         st.session_state.analysis_method = analysis_method
     if uploaded_file is not None:
