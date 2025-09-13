@@ -14,6 +14,7 @@ seaborn==0.12.2
 # AI/Vision Processing
 google-generativeai==0.3.2
 python-dotenv==1.0.0
+qrcode[pil]==7.4.2
 
 # Machine Learning Dependencies
 scikit-learn==1.3.0
