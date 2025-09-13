@@ -23,7 +23,12 @@ class VisionProcessor:
     def __init__(self, api_key: str = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            print("Warning: Gemini API key not found. Set GEMINI_API_KEY environment variable. Using mock data for demo.")
+            print("\n⚠️  WARNING: Gemini API key not configured!")
+            print("📝 To enable real image analysis:")
+            print("   1. Get API key from: https://makersuite.google.com/app/apikey")
+            print("   2. Set environment variable: GEMINI_API_KEY=your_key_here")
+            print("   3. Or create .env file with: GEMINI_API_KEY=your_key_here")
+            print("🔄 Currently using randomized mock data for demonstration\n")
             self.model = None
         else:
             # Configure Gemini
@@ -195,9 +200,27 @@ Respond ONLY with valid JSON in this exact format:
         else:
             violations.append("Net quantity not specified")
         
-        if any(word in text_lower for word in ["phone", "email", "contact", "customer care", "toll free"]):
+        # Enhanced consumer care detection
+        consumer_care_keywords = [
+            "phone", "email", "contact", "customer care", "toll free", "helpline",
+            "support", "service", "complaint", "@", "www", "http", "customer",
+            "care@", "info@", "support@", "+91", "1800", "080", "011", "022", "033", "044"
+        ]
+        
+        if any(word in text_lower for word in consumer_care_keywords):
             fields["consumer_care"]["found"] = True
             fields["consumer_care"]["compliance"] = "Pass"
+            # Try to extract the actual contact info
+            import re
+            # Look for email patterns
+            email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text)
+            # Look for phone patterns
+            phone_match = re.search(r'(\+91[\s-]?)?[6789]\d{9}|1800[\s-]?\d{3}[\s-]?\d{4}', text)
+            
+            if email_match:
+                fields["consumer_care"]["value"] = email_match.group()
+            elif phone_match:
+                fields["consumer_care"]["value"] = phone_match.group()
         else:
             violations.append("Consumer care details missing")
         
@@ -228,19 +251,53 @@ Respond ONLY with valid JSON in this exact format:
         """
         Return mock response for demo purposes when API key is not available
         """
-        return {
-            "success": True,
-            "compliance_data": {
-                "manufacturer": {"found": True, "value": "ABC Foods Pvt Ltd, Plot 123, Industrial Area, Mumbai - 400001", "compliance": "Pass"},
-                "net_quantity": {"found": True, "value": "500g", "compliance": "Pass"},
-                "mrp": {"found": True, "value": "₹125 (Incl. of all taxes)", "compliance": "Pass"},
-                "consumer_care": {"found": False, "value": "", "compliance": "Fail"},
-                "mfg_date": {"found": True, "value": "MFD: 10/2024", "compliance": "Pass"},
+        import random
+        
+        # Randomize mock data to simulate real analysis
+        mock_scenarios = [
+            {
+                "manufacturer": {"found": True, "value": "FreshFood Industries Pvt Ltd, Sector 12, Gurgaon - 122001", "compliance": "Pass"},
+                "net_quantity": {"found": True, "value": "250g", "compliance": "Pass"},
+                "mrp": {"found": True, "value": "₹89 (Incl. of all taxes)", "compliance": "Pass"},
+                "consumer_care": {"found": True, "value": "Customer Care: 1800-123-4567", "compliance": "Pass"},
+                "mfg_date": {"found": True, "value": "MFD: 12/2024", "compliance": "Pass"},
                 "country_origin": {"found": True, "value": "Made in India", "compliance": "Pass"},
-                "product_name": {"found": True, "value": "Premium Snacks", "compliance": "Pass"},
-                "compliance_score": 85,
-                "violations": ["Consumer care details missing - no phone/email provided"],
+                "product_name": {"found": True, "value": "Organic Cookies", "compliance": "Pass"},
+                "compliance_score": 100,
+                "violations": [],
                 "overall_status": "Compliant"
             },
-            "raw_response": "Mock response - Gemini API key not configured. Using sample data for demonstration."
+            {
+                "manufacturer": {"found": True, "value": "HealthyBites Co., Plot 45, MIDC, Pune - 411019", "compliance": "Pass"},
+                "net_quantity": {"found": True, "value": "500ml", "compliance": "Pass"},
+                "mrp": {"found": True, "value": "₹145", "compliance": "Pass"},
+                "consumer_care": {"found": True, "value": "Email: care@healthybites.com, Ph: +91-98765-43210", "compliance": "Pass"},
+                "mfg_date": {"found": False, "value": "", "compliance": "Fail"},
+                "country_origin": {"found": True, "value": "India", "compliance": "Pass"},
+                "product_name": {"found": True, "value": "Natural Fruit Juice", "compliance": "Pass"},
+                "compliance_score": 85,
+                "violations": ["Manufacturing date not clearly visible"],
+                "overall_status": "Compliant"
+            },
+            {
+                "manufacturer": {"found": True, "value": "TastyTreats Pvt Ltd, Industrial Estate, Chennai - 600058", "compliance": "Pass"},
+                "net_quantity": {"found": True, "value": "200g", "compliance": "Pass"},
+                "mrp": {"found": True, "value": "₹75 (Inclusive of all taxes)", "compliance": "Pass"},
+                "consumer_care": {"found": False, "value": "", "compliance": "Fail"},
+                "mfg_date": {"found": True, "value": "Best Before: 06/2025", "compliance": "Pass"},
+                "country_origin": {"found": True, "value": "Made in India", "compliance": "Pass"},
+                "product_name": {"found": True, "value": "Chocolate Wafers", "compliance": "Pass"},
+                "compliance_score": 85,
+                "violations": ["Consumer care details missing - no contact information provided"],
+                "overall_status": "Compliant"
+            }
+        ]
+        
+        # Select a random scenario
+        selected_scenario = random.choice(mock_scenarios)
+        
+        return {
+            "success": True,
+            "compliance_data": selected_scenario,
+            "raw_response": "Mock response - Gemini API key not configured. Using randomized sample data for demonstration. Configure GEMINI_API_KEY for real analysis."
         }
