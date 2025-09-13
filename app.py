@@ -997,32 +997,7 @@ def render_file_upload():
         help="Auto-detect works best, but you can manually select interface type"
     )
     
-    # Analysis method selector
-<<<<<<< HEAD
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        uploaded_file = st.file_uploader(
-            "Choose a product packaging image",
-            type=['png', 'jpg', 'jpeg', 'webp'],
-            help="Upload a clear image of the product packaging with visible text"
-        )
-    with col2:
-        st.markdown("**Analysis Method:**")
-        analysis_method = st.radio(
-            "Choose analysis approach",
-            options=['cascading', 'gemini_only'],
-            format_func=lambda x: {
-                'cascading': '✅ Smart Analysis (Recommended)',
-                'gemini_only': '🔧 Direct Gemini Only (Debug)'
-            }[x],
-            index=0,
-            help="Smart Analysis uses our enhanced field extraction with real Gemini API integration. Choose this for accurate results from your uploaded images."
-        )
-        st.session_state.analysis_method = analysis_method
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        col1, col2, col3 = st.columns([1, 2, 1])
-=======
+    # Analysis method selector  
     with st.container():
         col1, col2 = st.columns([3, 2] if interface_mode != "Mobile Mode" else [1, 1])
         
@@ -1064,7 +1039,6 @@ def render_file_upload():
                 with st.expander("📱 Mobile Camera Options"):
                     st.info("📷 For mobile camera access, switch to 'Mobile Mode' above or visit the Mobile Access section.")
         
->>>>>>> 2edad0b (Prepare for cloud deployment: Clean app.py for mobile HTTPS support)
         with col2:
             st.markdown("**Analysis Method:**")
             analysis_method = st.radio(
